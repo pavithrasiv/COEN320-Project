@@ -15,7 +15,7 @@
 #define MULTIPLE_PLANE 2
 #define GRID 3
 #define LOG 4
-DataDisplay::DataDisplay() : channelID(-1), logError(-1)
+DataDisplay::DataDisplay() : channelID(-1), logFile(-1)
 {
 }
 
@@ -34,8 +34,8 @@ void DataDisplay::run()
     }
 
     // Open log file
-    logError = creat("/data/home/qnxuser/log.txt", S_IRUSR | S_IWUSR | S_IXUSR);
-    if (logError == -1)
+    logFile = creat("/data/home/qnxuser/log.txt", S_IRUSR | S_IWUSR | S_IXUSR);
+    if (logFile == -1)
     {
         std::cout << "DataDisplay failed to open logfile. Errno is "
                   << errno << std::endl;
@@ -44,9 +44,9 @@ void DataDisplay::run()
     receiveMessage(); // start to listen for messages
 
     // Close log file
-    if (logError != -1)
+    if (logFile != -1)
     {
-        close(logError);
+        close(logFile);
     }
 }
 
@@ -101,11 +101,16 @@ void DataDisplay::receiveMessage()
         case LOG:
         {
             // Command to print a grid to the log file
-            std::string grid = generateGrid(msg.aircraft.multiple);
+            std::string fullGrid = generateGrid(msg.aircraft.multiple);
             MsgReply(rcvid, EOK, NULL, 0);
-            if (logError != -1)
+            if (logFile != -1)
             {
                 // TODO:print Logs
+                char *buff = new char[fullGrid.length() + 1];
+				strncpy(buff, fullGrid.c_str(), grid.length() + 1);
+				write(logFile, buff, fullGrid.length() + 1);
+				write(logFile, "\n", 1);
+				delete[] buff;
             }
             else
             {

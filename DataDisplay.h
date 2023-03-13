@@ -41,7 +41,7 @@ private:
     std::string createGrid(multipleAircraftDisplay &totalAirSaceInfo);
 
     int channelID;
-    int logError;
+    int logFile;
 
 public:
     DataDisplay();
