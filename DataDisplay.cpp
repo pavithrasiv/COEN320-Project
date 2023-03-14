@@ -6,7 +6,8 @@
 #include <sys/stat.h>
 #include <stdlib.h>
 #include <sstream>
-
+#include <fstream>
+#include <iostream>
 #define ROWSIZE 100
 #define COLUMSIZE 100
 #define CELLSIZE 25
@@ -15,7 +16,7 @@
 #define MULTIPLE_PLANE 2
 #define GRID 3
 #define LOG 4
-DataDisplay::DataDisplay() : channelID(-1), logFile(-1)
+DataDisplay::DataDisplay() : channelID(-1)
 {
 }
 
@@ -34,20 +35,14 @@ void DataDisplay::run()
     }
 
     // Open log file
-    logFile = creat("/data/home/qnxuser/log.txt", S_IRUSR | S_IWUSR | S_IXUSR);
-    if (logFile == -1)
+    std::fstream logFile;
+    logFile.open(("log.txt"), std::ios_base::out | std::ios_base::app); // open same file if already exists
+    if (!logFile)
     {
-        std::cout << "DataDisplay failed to open logfile. Errno is "
-                  << errno << std::endl;
+        std::cout << "Data Display failed to open logfile." << std::endl;
     }
 
     receiveMessage(); // start to listen for messages
-
-    // Close log file
-    if (logFile != -1)
-    {
-        close(logFile);
-    }
 }
 
 void DataDisplay::receiveMessage()
@@ -103,20 +98,17 @@ void DataDisplay::receiveMessage()
             // Command to print a grid to the log file
             std::string fullGrid = generateGrid(msg.aircraft.multiple);
             MsgReply(rcvid, EOK, NULL, 0);
-            if (logFile != -1)
+            logFile.open(("log.txt"), std::ios_base::out | std::ios_base::app);
+            if (!logFile)
             {
-                // TODO:print Logs
-                char *buff = new char[fullGrid.length() + 1];
-				strncpy(buff, fullGrid.c_str(), grid.length() + 1);
-				write(logFile, buff, fullGrid.length() + 1);
-				write(logFile, "\n", 1);
-				delete[] buff;
+                std::cout
+                    << "DataDisplay: Could not open log File."
+                    << std::endl;
             }
             else
             {
-                std::cout
-                    << "DataDisplay: Received a log command but the log file is not opened."
-                    << std::endl;
+                logFile << fullGrid << std::endl;
+                logFile.close();
             }
             break;
         }
