@@ -23,7 +23,6 @@ pthread_t createComputerSysThread() {
 	/* Creating thread with constructed attribute object */
 	receivedComm = pthread_create(&thread, &attr, CompSystemMain, NULL);
 
-
 	return thread;
 }
 
@@ -31,7 +30,6 @@ pthread_t createComputerSysThread() {
 void * CompSystemMain(void *arg) {
 
     cout << "the thread for the computer system is started..." << endl;
-
 
 	string nameChannel= "ComputerChannel";
 
@@ -46,6 +44,10 @@ void * CompSystemMain(void *arg) {
 		cout << "Error in the channel name" << endl;
 		return NULL;
 	}
+
+    //initialize the clock here
+    time_t timerClock;
+    time(&timerClock);
 
 	while (true) {
 
@@ -66,27 +68,28 @@ void * CompSystemMain(void *arg) {
         //check what type of message that is received 
 
         switch(message.type){
-            case OperatorSetCalculationInterval:
-                cout << "message from operator is received" << endl;
-
-                //call method that is goinng to perform the calculation of the interval 
-                //call method that is going to be replying to the message received
-
-                break;
-
             case AirplaneRadarUpdate:
                 cout << "message from airplane received" << endl;
-
                 //method that is going to be handling the update of the airplane 
                 //call method that is going to be replying to the message received
-
+                radarUpdate();
                 break;
 
             case ClockTimerUpdate:
                 //method to update the clock timer 
                 //call method that is going to be replying to the message received
                 //check for collision every 30s 
+                //call method that is goinng to perform the calculation of the interval 
+                //call method that is going to be replying to the message received
                 collisionCheck();
+                break;
+            case addAirplane:
+                //this is going to be adding the airplane in the list/array/stack...
+                addingAirplane();
+                break;
+            case removeAirplane:
+                //this is going to be removing the airplane from the list/array/stack...
+                removingAirplane();
                 break;
 
             default:
@@ -100,6 +103,20 @@ void * CompSystemMain(void *arg) {
 	return NULL;
 }
 
+void addingAirplane(){
+
+}
+
+void removingAirplane(){
+
+}
+
+void radarUpdate(){
+
+}
+
+vector airplanes_checking_collision;
+
 void collisionCheck(){
 
     cout << "There is a request to update the clock timer.." << endl;
@@ -108,15 +125,20 @@ void collisionCheck(){
 
 	double collisionTime;
 
-	for (size_t i=0; ; i++) {
-		for ( size_t y=i+1; ; y++) {
-			//test the matrix in which we are going to be checking for plane collision 
-			// if there is a collision, we want to display a warning message
-			if (collision == true ) {
+    //test the matrix in which we are going to be checking for plane collision 
+    for (int i = 0; i < airplanes_checking_collision.size(); ++i) {
+
+        for (int j = i + 1; j < airplanes_checking_collision.size(); ++j) {
+            
+            // if there is a collision, we want to display a warning message
+            if (airplanes_checking_collision[i].IsCollidingWith(airplanes_checking_collision[j])) {
+
                 cout << "there is a collision..." << endl; 
                 cout << "We are going to be displaying th plane ID1 and ID2, time of collision, position in the 3d matrix, and collision time" << endl;
-			}
-		}
-	}
-	//this is where we are going to be repluing to the message 
+
+                cout << "Airplane with ID " << airplanes_checking_collision[i].id << " colliding with airplane with ID " << airplanes_checking_collision[j].id << endl;
+            }
+        }
+    }
+    //this is where we are going to be replying to the message with an update of the collision
 }
