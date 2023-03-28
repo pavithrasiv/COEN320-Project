@@ -2,80 +2,22 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <vector>
+#define MIN_AIRSPACE_X_REGION 0
+#define MAX_AIRSPACE_X_REGION 100000
+#define MIN_AIRSPACE_Y_REGION 0
+#define MAX_AIRSPACE_Y_REGION 100000
+#define MIN_AIRSPACE_Z_REGION 15000
+#define MAX_AIRSPACE_Z_REGION 25000
 
-// Plane thread 
 
-// Plane IPC
-
-
-// Plane constructor
-Plane::Plane(string id, double arrivalTime, double xPos, double yPos, double zPos, double xSpeed, double ySpeed, double zSpeed)
-    : m_id(id), m_arrivalTime(arrivalTime), m_xPos(xPos), m_yPos(yPos), m_zPos(zPos), m_xSpeed(xSpeed), m_ySpeed(ySpeed), m_zSpeed(zSpeed)
+Plane::Plane(int id, int *pos[3], int *vel[3], int time)
 {
-}
-
-string Plane::getID() const {
-    return m_id;
-}
-
-double Plane::getArrivalTime() const {
-    return m_arrivalTime;
-}
-
-double Plane::getXPos() const {
-    return m_xPos;
-}
-
-double Plane::getYPos() const {
-    return m_yPos;
-}
-
-double Plane::getZPos() const {
-    return m_zPos;
-}
-
-double Plane::getXSpeed() const {
-    return m_xSpeed;
-}
-
-double Plane::getYSpeed() const {
-    return m_ySpeed;
-}
-
-double Plane::getZSpeed() const {
-    return m_zSpeed;
-}
-
-void Plane::setID(string id) {
-    m_id = id;
-}
-
-void Plane::setArrivalTime(double arrivalTime) {
-    m_arrivalTime = arrivalTime;
-}
-
-void Plane::setXPos(double xPos) {
-    m_xPos = xPos;
-}
-
-void Plane::setYPos(double yPos) {
-    m_yPos = yPos;
-}
-
-void Plane::setZPos(double zPos) {
-    m_zPos = zPos;
-}
-
-void Plane::setXSpeed(double xSpeed) {
-    m_xSpeed = xSpeed;
-}
-
-void Plane::setYSpeed(double ySpeed) {
-    m_ySpeed = ySpeed;
-}
-
-void Plane::setZSpeed(double zSpeed) {
-    m_zSpeed = zSpeed;
+    outsideAirspace = false;
+    position = pos;
+    velocity = vel;
+    aircraftID = id;
+    arrivalTime = time;
 }
 
 void Plane::startThread(int connectionID) {
@@ -97,18 +39,62 @@ void Plane::threadFunction() {
     }
 }
 
-// Plane output 
+
+void Plane::ThreadStop(){
+    // Destroy thread here
+
+}
+
+void Plane::ThreadPlaneTimerStart() {
+    Timer timer(0, 1); // Add ch and co here
+    while (!outsideAirspace) {
+        wait_next_activation();
+        updatePlaneLocation();
+        InsideAirspace();
+    }
+}
+
+void Plane::updatePlaneLocation()
+{
+    // Timer trigger int POSITION_UPDATE_TIME = 1;
+    position[0] += velocity[0];
+    position[1] += velocity[1];
+    position[2] += velocity[2];
+
+
+}
+
+void Plane::InsideAirspace()
+{
+
+    // checking to see if left airspace
+    if (pos_x < MIN_AIRSPACE_X_REGION || pos_x > MAX_AIRSPACE_X_REGION || pos_y < MIN_AIRSPACE_Y_REGION || pos_y > MAX_AIRSPACE_Y_REGION || pos_z < MAX_AIRSPACE_Z_REGION || pos_z > MAX_AIRSPACE_Z_REGION)
+    {
+        outsideAirspace = true;
+    }
+    return outsideAirspace;
+}
+
+int *Plane::getPlaneLocation()
+{
+
+    return position;
+}
+
+
 vector<Plane> readPlanesFromFile(string fileName) {
     vector<Plane> planes;
     ifstream inputFile(fileName);
     string line;
     while (getline(inputFile, line)) {
         stringstream ss(line);
-        string id;
-        double arrivalTime, xPos, yPos, zPos, xSpeed, ySpeed, zSpeed;
+        int id, arrivalTime;
+        double xPos, yPos, zPos, xSpeed, ySpeed, zSpeed;
         char comma;
         if (ss >> arrivalTime >> comma >> id >> comma >> xPos >> comma >> yPos >> comma >> zPos >> comma >> xSpeed >> comma >> ySpeed >> comma >> zSpeed) {
-            planes.emplace_back(id, arrivalTime, xPos, yPos, zPos, xSpeed, ySpeed, zSpeed);
+            int *pos[3] = {&xPos, &yPos, &zPos};
+            int *vel[3] = {&xSpeed, &ySpeed, &zSpeed};
+            planes.emplace_back(id, pos, vel, arrivalTime);
         }
     }
     return planes;

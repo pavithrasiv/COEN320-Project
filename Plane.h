@@ -6,54 +6,32 @@
 #include <iostream>
 #include "Timer.h"
 
+
+using namespace std;
+
 class Plane {
 public:
-    // Constructor
-    Plane(string id, double arrivalTime, double xPos, double yPos, double zPos, double xSpeed, double ySpeed, double zSpeed);
-    
-    // Getters
-    string getID() const;
-    double getArrivalTime() const;
-    double getXPos() const;
-    double getYPos() const;
-    double getZPos() const;
-    double getXSpeed() const;
-    double getYSpeed() const;
-    double getZSpeed() const;
-
-    // Setters
-    void setID(string id);
-    void setArrivalTime(double arrivalTime);
-    void setXPos(double xPos);
-    void setYPos(double yPos);
-    void setZPos(double zPos);
-    void setXSpeed(double xSpeed);
-    void setYSpeed(double ySpeed);
-    void setZSpeed(double zSpeed);
-
-    // Thread functions
+    Plane(int id, int *pos[3], int *vel[3], int time);
     void startThread(int connectionID);
     void stopThread();
-
-    ~Plane();
+    void threadFunction();
+    void ThreadStop();
+    void ThreadPlaneTimerStart();
+    void updatePlaneLocation();
+    void InsideAirspace();
+    int *getPlaneLocation();
 
 private:
-    string m_id;
-    double m_arrivalTime;
-    double m_xPos;
-    double m_yPos;
-    double m_zPos;
-    double m_xSpeed;
-    double m_ySpeed;
-    double m_zSpeed;
-
-    // Thread data
+    int aircraftID;
+    int *position[3];
+    int *velocity[3];
+    int arrivalTime;
+    bool outsideAirspace;
     thread m_thread;
     bool m_stopThread;
     int m_connectionID;
-
-    // Thread functions
-    void threadFunction();
 };
+
+vector<Plane> readPlanesFromFile(string fileName);
 
 #endif // PLANE_H
