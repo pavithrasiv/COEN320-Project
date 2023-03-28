@@ -13,10 +13,9 @@
 #define CELLSIZE 25
 
 #define SINGLE_PLANE 1
-#define MULTIPLE_PLANE 2
 #define GRID 3
 #define LOG 4
-DataDisplay::DataDisplay() : channelID(-1)
+DataDisplay::DataDisplay() : channelID(-1) fd(-1)
 {
 }
 
@@ -30,120 +29,88 @@ void DataDisplay::run()
     channelID = channelCreate(0);
     if (channelID == -1)
     {
-        std::cout << "Creation of channel failed. Exiting thread." << std::endl;
+        std::cout << "Channel failed to create. Exiting thread." << std::endl;
         return;
     }
-
-    // Open log file
-    std::fstream logFile;
-    logFile.open(("log.txt"), std::ios_base::out | std::ios_base::app); // open same file if already exists
-    if (!logFile)
-    {
-        std::cout << "Data Display failed to open logfile." << std::endl;
+    
+    fd = creat( "/data/home/qnxuser/myfile.dat", S_IRUSR | S_IWUSR | S_IXUSR );
+    if (fd == -1){
+        cout << "Log file could not be created" << endl;
     }
-
     receiveMessage(); // start to listen for messages
 }
 
 void DataDisplay::receiveMessage()
 {
     int receiveMessageID;   // receive id
-    dataDisplayMessage msg; //
+     //
     while (1)
     {
 
-        receiveMessageID = MsgReceive(channelID, &msg, sizeof(msg), NULL); // get id for that specific message
+        Compsystem command;
+        receiveMessageID = MsgReceive(channelID, &command, sizeof(command), NULL); // get id for that specific message
 
-        switch (msg.command)
+        switch (command)
         {
         case SINGLE_PLANE:
         {
-            // Command to display one plane
+            // Command to display Warning of one plane
             MsgReply(receiveMessageID, EOK, NULL, 0); // sending basic ACK
-            std::cout << "Aircraft ID: " << msg.aircraft.single.aircraftID
+            std::cout << "WARNING: Aircraft ID: " << msg.getAircraftID()
                       << std::endl
                       << "Aircraft position: "
-                      << msg.aircraft.single.position
+                      << msg.getPlaneLocation()
                       << std::endl
-                      << "Aircraft velocity " << msg.aircraft.single.velocity
+                      << "Aircraft velocity " << msg.getPlaneVelocity() << "is on a TRAJECTORY TO CRASH!"
                       << std::endl;
-            break;
-        }
-        case MULTIPLE_PLANE:
-        {
-            // Command to display multiple planes
-            MsgReply(receiveMessageID, EOK, NULL, 0);
-            for (int i = 0; i < msg.aircraft.multiple.numberOfAircrafts; // get total aircrafts
-                 i++)
-            {
-                // std::cout <<"Aircraft positions: " <<msg.CommandBody.multiple->positionArray <<"  " <<"Aircraft velocities: " <<msg.commandBody.multiple->velocityArray <<std::endl;
-                std::cout << "Aircraft " << i + 1 << " with position: "
-                          << msg.aircraft.multiple.positionArray[i]
-                          << " and velocity: "
-                          << msg.aircraft.multiple.velocityArray[i]
-                          << std::endl;
-            }
             break;
         }
         case GRID: // Top View grid (X and Y)
         {
             // Command to print a grid to the console
             // The sender deletes the arrays allocated for grid printing once we reply, so we need them to stay valid until then.
-            std::cout << generateGrid(msg.aircraft.multiple);
+            std::cout << generateGrid(planes);
             MsgReply(receiveMessageID, EOK, NULL, 0);
             break;
         }
         case LOG:
         {
             // Command to print a grid to the log file
-            std::string fullGrid = generateGrid(msg.aircraft.multiple);
+            char buff[] = generateGrid(planes);
             MsgReply(rcvid, EOK, NULL, 0);
-            logFile.open(("log.txt"), std::ios_base::out | std::ios_base::app);
-            if (!logFile)
-            {
-                std::cout
-                    << "DataDisplay: Could not open log File."
-                    << std::endl;
-            }
-            else
-            {
-                logFile << fullGrid << std::endl;
-                logFile.close();
-            }
-            break;
-        }
-        case EXIT_THREAD:
-            MsgReply(receiveMessageID, EOK, NULL, 0);
-            return;
+            size_written = write( fd, buff, sizeof( buff ) );
+            if( size_written != sizeof( buffer ) ) {perror( "Error writing to log file" );
+            return EXIT_FAILURE
+            
         }
     }
 }
 
 // Creates a grid view of the airspace, ignoring z-axis, doing x and y (top-view)
 // Begins with (0,0) in the top-left corner.
-std::string DataDisplay::generateGrid(multipleAircraftDisplay &airspaceInfo)
+std::string DataDisplay::generateGrid(std::vector<Plane> &airspaceInfo)
 {
 
     std::string grid[ROWSIZE][COLUMSIZE]; // grid 100000ft x 100000ft with each square being 1000ft
     // storing into grid
-    for (int i = 0; i < airspaceInfo.numberOfAircrafts; i++)
+    for (int i = 0; i < airspaceInfo.size(); i++)
     {
         for (int j = 0; j < ROWSIZE; j++)
         {
             // get y and get x are from Vector3D class
-            if (airspaceInfo.positionArray[i].getypostion >= (CELLSIZE * j) && airspaceInfo.positionArray[i].getypostion < (CELLSIZE * (j + 1)))
+            if (*(1)airspaceInfo[i].getPlaneLocation() >= (CELLSIZE * j) && *(1)aairspaceInfo[i].getPlaneLocation() < (CELLSIZE * (j + 1)))
             { // checking y
                 for (int k = 0; k < COLUMSIZE; k++)
                 {
                     // only for x
-                    if (airspaceInfo.positionArray[i].getxpostion >= (CELLSIZE * k) && airspaceInfo.positionArray[i].getxpostion < (CELLSIZE * (k + 1)))
+                    if (*(0)airspaceInfo[i].getPlaneLocation() >= (CELLSIZE * k) && *(0)airspaceInfo[i].getPlaneLocation() < (CELLSIZE * (k + 1)))
                     { // adding to grid
                         if (grid[j][k] != "")
                         {
                             grid[j][k] += ",";
                         }
                         grid[j][k] += std::to_string(
-                            airspaceInfo.planeIDArray[i]);
+                            airspaceInfo[i].getAircraftID);
                     }
                 }
             }

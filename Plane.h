@@ -20,6 +20,8 @@ public:
     void updatePlaneLocation();
     void InsideAirspace();
     int *getPlaneLocation();
+    int *getPlaneVelocity();
+    int getAircraftID();
 
 private:
     int aircraftID;

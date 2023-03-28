@@ -1,50 +1,24 @@
 #ifndef DATADISPLAY_H
 #define DATADISPLAY_H
+#include "Plane.h"
 #include <string>
-
-// for one aircraft
-typedef struct
-{
-    int aircraftID;
-    Vector3D position; // x y and z components of plane from communication system
-    Vector3D velocity;
-} singleAircraftDisplay;
-
-// for displaying multiple aircrafts
-typedef struct
-{
-    int numberOfAircrafts;
-    Vector3D[numberOfAircrafts] positionArray;
-    Vector3D[numberOfAircrafts] velocityArray;
-    int[numberOfAircrafts] planeIDArray;
-} multipleAircraftDisplay;
-
-union aircraftUnion
-// Stored in memory
-{
-    singleAircraftDisplay single;
-    multipleAircraftDisplay multiple;
-};
-
-typedef struct
-{
-    int command; // defining which of union element it is
-    aircraftUnion aircraft;
-
-} dataDisplayMessage; // Type of message
+#include <vector>
 
 class DataDisplay
 {
 private:
     void run();
     void receiveMessage();
-    std::string createGrid(multipleAircraftDisplay &totalAirSaceInfo);
+    std::string createGrid(std::vector<Plane>);
 
     int channelID;
+    std::vector<Plane> planes;
+    int fd;
+
 
 public:
     DataDisplay();
     int getChannelID() const;
-    static void start(void context);
+    static void start(void *context);
 };
 #endif

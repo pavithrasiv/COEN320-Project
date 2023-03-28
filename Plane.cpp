@@ -18,12 +18,24 @@ Plane::Plane(int id, int *pos[3], int *vel[3], int time)
     velocity = vel;
     aircraftID = id;
     arrivalTime = time;
+    m_connectionID = -1;
+}
+int Plane::getChannelID(){
+    return m_connectionID;
 }
 
+
+
 void Plane::startThread(int connectionID) {
-    m_connectionID = connectionID;
-    m_stopThread = false;
-    m_thread = thread(&Plane::threadFunction, this);
+    m_connectionID = ChannelCreate(0);
+    if (m_connectionID == -1){
+        cout << "Error could not create Channel" << endl;
+    }
+    else {
+        m_stopThread = false;
+        m_thread = thread(&Plane::threadFunction, this);
+    }
+   
 }
 
 void Plane::stopThread() {
@@ -80,7 +92,9 @@ int *Plane::getPlaneLocation()
 
     return position;
 }
-
+int *Plane::getPlaneVelocity(){
+    return velocity;
+}
 
 vector<Plane> readPlanesFromFile(string fileName) {
     vector<Plane> planes;
