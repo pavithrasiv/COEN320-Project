@@ -6,6 +6,18 @@
 #include <sys/dispatch.h>
 #include "Structure.h"
 #include <pthread.h>
+#include "Plane.h"
+#include <vector>
+using namespace std;
+
+vector <Plane> allPlane;
+
+void *CompSystemMain(void *arg);
+void addingAirplane();
+void removingAirplane();
+void radarUpdate();
+void collisionCheck();
+bool properMsgFormat(int receivedID, Msg2ComputerSys message);
 
 //the communication is going to be done in teh same manner as CommSystem
 pthread_t createComputerSysThread() {
@@ -37,7 +49,7 @@ void * CompSystemMain(void *arg) {
 	Msg2ComputerSys message;
 	int receivedID;
 
-	pathChannel = name_attach(NULL, nameChannel.c_str(), 0);
+    pathChannel = name_attach(NULL, nameChannel.c_str(), 0);
 
     //if there is no valid path name, there is going to be an error 
 	if(pathChannel == NULL) {
@@ -104,16 +116,58 @@ void * CompSystemMain(void *arg) {
 }
 
 void addingAirplane(){
-
+	   Plane newPlane;
+	   allPlane.push_back(newPlane);
+	   cout << "A new airplane has been added." << endl;
 }
 
 void removingAirplane(){
+    // Get the ID of the plane to be removed
+    int planeID;
+    cout << "Enter the ID of the plane to be removed: ";
+    cin >> planeID;
 
+    // Find the plane in the list
+    bool planeFound = false;
+    for (int i = 0; i < allPlane.size(); i++) {
+        if (allPlane[i].id == planeID) {
+            allPlane.erase(allPlane.begin() + i);
+            planeFound = true;
+            break;
+        }
+    }
+
+    // Display an error message if the plane is not found
+    if (!planeFound) {
+        cout << "Error: plane with ID " << planeID << " not found." << endl;
+    }
 }
+
 
 void radarUpdate(){
 
+    // Update the position and velocity of all planes in the list
+    for (int i = 0; i < allPlane.size(); i++)
+    {
+        // Call the updatePosition() method of each Plane object to update its position
+        allPlane[i].updatePosition();
+
+        // Call the updateVelocity() method of each Plane object to update its velocity
+        allPlane[i].updateVelocity();
+    }
+
+    // Get the current time
+    time_t currentTime;
+    time(&currentTime);
+
+    // Update the timestamp of the last radar update
+    static time_t lastRadarUpdate = 0;
+    lastRadarUpdate = currentTime;
+
+    // Print a message to indicate that the radar update is complete
+    cout << "Radar update complete." << endl;
 }
+
 
 vector airplanes_checking_collision;
 
