@@ -39,7 +39,7 @@ void * communicationMain() {
 	return NULL;
 }
 
-pthread_t createCommunication() {
+pthread_t createCommunicationThread() {
 	int receivedComm;
 	pthread_t thread;
 	pthread_attr_t attribute;
