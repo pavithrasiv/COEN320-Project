@@ -1,39 +1,37 @@
-#ifndef PLANE_H
-#define PLANE_H
+#ifndef PLANECLASS_H
+#define PLANECLASS_H
 
-#include <string>
-#include <thread>
-#include <iostream>
+#include <stdio.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/dispatch.h>
 #include "Timer.h"
-
+#include <vector>
+#include <string>
 
 using namespace std;
 
-class Plane {
+class PlaneClass {
 public:
-    Plane(int id, int *pos[3], int *vel[3], int time);
-    void startThread(int connectionID);
-    void stopThread();
-    void threadFunction();
-    void ThreadStop();
+    PlaneClass(int id, int posX, int posY, int posZ, int velX, int velY, int velZ, int time);
     void ThreadPlaneTimerStart();
     void updatePlaneLocation();
     void InsideAirspace();
-    int *getPlaneLocation();
-    int *getPlaneVelocity();
-    int getAircraftID();
+    int getAircraftID() const;
+    int getArrivalTime() const;
+    int getPosition(int posValue) const;
+    int getVelocity(int posValue) const;
+    ~PlaneClass();
 
 private:
     int aircraftID;
-    int *position[3];
-    int *velocity[3];
+    int positionTrue[3];
+    int velocity[3];
     int arrivalTime;
     bool outsideAirspace;
-    thread m_thread;
-    bool m_stopThread;
-    int m_connectionID;
 };
 
-vector<Plane> readPlanesFromFile(string fileName);
+vector<PlaneClass> readPlanesFromFile(string fileName);
 
 #endif // PLANE_H
