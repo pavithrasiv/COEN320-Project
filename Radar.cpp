@@ -18,10 +18,11 @@ std::vector<int *> Radar::scanAirspace(std::vector<Plane> &planes)
 void Radar::sendRadarScan(std::vector<Plane> planes)
 {
     for (int i = 0; i < planes.size(); i++)
-    [
-        int coid = ConnectAttach(0, 0, planes[i].getChannelID(), _NTO_SIDE_CHANNEL, 0);
-        Plane msg;
-    ]
+        [int coid = ConnectAttach(0, 0, planes[i].getChannelID(), _NTO_SIDE_CHANNEL, 0);
+
+            int *msg = planes[i].getPlaneLocation();
+            MsgSend(coid, &msg, sizeof(msg));
+        ]
 
     // Declare channel
     // int coid = ConnectAttach(0, 0, p.getChid(), _NTO_SIDE_CHANNEL, 0);

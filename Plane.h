@@ -6,12 +6,12 @@
 #include <iostream>
 #include "Timer.h"
 
-
 using namespace std;
 
-class Plane {
+class Plane
+{
 public:
-    Plane(int id, int *pos[3], int *vel[3], int time);
+    Plane(int id, int pos[3], int vel[3], int time);
     void startThread(int connectionID);
     void stopThread();
     void threadFunction();

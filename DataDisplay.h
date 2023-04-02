@@ -6,15 +6,18 @@
 
 class DataDisplay
 {
+    typedef struct plane
+    {
+        std::vector<Plane> planes;
+        int command;
+    } planeInfo;
+
 private:
     void run();
     void receiveMessage();
     std::string createGrid(std::vector<Plane>);
-
     int channelID;
-    std::vector<Plane> planes;
     int fd;
-
 
 public:
     DataDisplay();
