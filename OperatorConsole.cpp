@@ -15,8 +15,11 @@ OperatorConsole::OperatorConsole() {
 }
 
 void OperatorConsole::changeSpeed(int id, double s) {
-	int opConsoleID;
-	Msg2CommSys messageCompSys;
+	Plane planeID;
+	Plane *velocity[3];
+	
+
+
 }
 
 void OperatorConsole::changeAltitude(int id, int a) {
@@ -25,8 +28,8 @@ void OperatorConsole::changeAltitude(int id, int a) {
 }
 
 void OperatorConsole::changePosition(int id, float orient) {
-	int opConsoleID;
-	Msg2CommSys messageCompSys;
+	Plane planeID;
+	Plane *position[3];
 }
 
 void OperatorConsole::storeCommands() {
@@ -59,18 +62,31 @@ void OperatorConsole::storeCommands() {
 	return true;
 }
 
-void OperatorConsole::sendMessage() {
-	int opConsoleID;
-	Msg2CommSys messageCompSys;
+void OperatorConsole::fetchPlaneData(Plane* plane) {
+	Plane data;
+}
+
+void OperatorConsole::sendMessage(CompSystem* compSystem, int planeID) {
+	this->compSystem = compSystem;
 }
 
 void OperatorConsole::printDetails(int id) {
-	int opConsoleID;
 
+	cout << "The aircraft's ID is the following: " << planeID << endl;
+	cout << "The aircraft's new flight level: " << endl;
+	cout << "The aircraft's new speed: " << velocity[3] << endl;
+	cout << "The aircraft's new position: " << position[3] << endl;
 }
 
-void* threadOpConsole(void* arg) {
+void* OperatorConsole::threadOpConsole(void* arg) {
 	OperatorConsole &operatorConsole = *((OperatorConsole*)arg);
+
+	// Run through the commands for a specific plane ID until it is no longer this ID that sends commands
+	Plane planeID;
+
+	while(planeID) {
+
+	}
 
 	// Verify which command method needs to be run
 	if("changeSpeed") {
