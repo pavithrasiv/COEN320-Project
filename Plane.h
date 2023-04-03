@@ -17,6 +17,7 @@ public:
     PlaneClass(int id, int posX, int posY, int posZ, int velX, int velY, int velZ, int time);
     void ThreadPlaneTimerStart();
     void updatePlaneLocation();
+    void update();
     void InsideAirspace();
     int getAircraftID() const;
     int getArrivalTime() const;

@@ -215,6 +215,69 @@ void* client(void *){
 	return EXIT_SUCCESS;
 }
 
+void TimerStart(vector<PlaneClass> planes){
+	uint32_t period_sec=1;
+	double period=period_sec;
+	Timer timer(period_sec,period_sec);
+	int count=0;
+	double t = 0;
+	while(t<30.0){
+			t=count*period;
+			for (PlaneClass& plane : planes) {
+			if (plane.getArrivalTime() > t){
+				cout << "Plane ID " << plane.getAircraftID() << " hasn't arrived yet!" <<endl;
+			}
+			else{
+				cout << "Update\n";
+			    cout << "For plane ID: " << plane.getAircraftID() <<  endl;
+			    plane.update();
+			    cout << "Position: (" << plane.getPosition(0) << ", " << plane.getPosition(1) << ", " << plane.getPosition(2) << ")" << endl;
+			    cout << "Velocity: (" << plane.getVelocity(0) << ", " << plane.getVelocity(1) << ", " << plane.getVelocity(2) << ")" << endl;
+			}
+			}
+			cout << "Time is " << t << endl;
+			timer.wait_next_activation();
+			count++;
+		}
+
+}
+
+void PlaneClass::update(){
+    positionTrue[0] += velocity[0];
+    positionTrue[1] += velocity[1];
+    positionTrue[2] += velocity[2];
+
+}
+
+void PlaneClass::updatePlaneLocation(){
+	uint32_t period_sec=1;
+	double period=period_sec;
+	Timer timer(period_sec,period_sec);
+	int count=0;
+	double t = 0;
+
+
+	while(t<30.0){
+		t=count*period;
+		if (arrivalTime > t){
+			cout << "Plane ID " << getAircraftID() << " hasn't arrived yet! Time is " << t << endl;
+		}
+		else{
+			cout << "Update\n";
+		    cout << "For plane ID: " << getAircraftID() << ". Time is " << t << endl;
+		    positionTrue[0] += velocity[0];
+		    positionTrue[1] += velocity[1];
+		    positionTrue[2] += velocity[2];
+		    cout << "Position: (" << getPosition(0) << ", " << getPosition(1) << ", " << getPosition(2) << ")" << endl;
+		    cout << "Velocity: (" << getVelocity(0) << ", " << getVelocity(1) << ", " << getVelocity(2) << ")" << endl;
+		}
+
+		timer.wait_next_activation();
+		count++;
+	}
+
+
+}
 
 PlaneClass::PlaneClass(int id, int posX, int posY, int posZ, int velX, int velY, int velZ, int time)
 {
@@ -262,6 +325,10 @@ int PlaneClass::getVelocity(int posValue) const {
 }
 
 PlaneClass::~PlaneClass() {
+    for(int i=0;i<3;i++) {
+        positionTrue[i] = 0;
+        velocity[i] = 0;
+    }
 
 }
 
@@ -279,6 +346,14 @@ int main(int argc, char*argv[]){
 	    cout << "Position: (" << plane.getPosition(0) << ", " << plane.getPosition(1) << ", " << plane.getPosition(2) << ")" << endl;
 	    cout << "Velocity: (" << plane.getVelocity(0) << ", " << plane.getVelocity(1) << ", " << plane.getVelocity(2) << ")" << endl;
 	}
+
+	//for (PlaneClass& plane : planes) {
+	//    plane.updatePlaneLocation();
+	//}
+
+	TimerStart(planes);
+
+
 	//Declare thread
 	pthread_t server_thread;
 	int err_no;
@@ -334,16 +409,10 @@ vector<PlaneClass> readPlanesFromFile(string fileName) {
             int yVelArr[] = { static_cast<int>(ySpeed) };
             int zVelArr[] = { static_cast<int>(zSpeed) };
             int *pos[3] = {xPosArr, yPosArr, zPosArr};
-            cout << "Position: " << *pos[0] << endl;
-            cout << "Position: " << *pos[1] << endl;
-            cout << "Position: " << *pos[2] << endl;
             int posX = *pos[0];
             int posY = *pos[1];
             int posZ = *pos[2];
             int *vel[3] = {xVelArr, yVelArr, zVelArr};
-            cout << "Velocity: " << *vel[0] << endl;
-            cout << "Velocity: " << *vel[1] << endl;
-            cout << "Velocity: " << *vel[2] << endl;
             int velX = *vel[0];
             int velY = *vel[1];
             int velZ = *vel[2];
