@@ -8,8 +8,8 @@
 #include <sstream>
 #include <fstream>
 #include <iostream>
-#define ROWSIZE 100
-#define COLUMSIZE 100
+#define ROWS 50
+#define COLUMS 50
 #define CELLSIZE 25
 
 #define WARNING 1
@@ -89,56 +89,62 @@ void DataDisplay::receiveMessage()
             }
         }
         }
+    }
+}
+// Creates a grid view of the airspace, ignoring z-axis, doing x and y (top-view)
+// Begins with (0,0) in the top-left corner.
+std::string DataDisplay::generateGrid(std::vector<PlaneClass> &airspaceInfo)
+{
 
-        // Creates a grid view of the airspace, ignoring z-axis, doing x and y (top-view)
-        // Begins with (0,0) in the top-left corner.
-        std::string DataDisplay::generateGrid(std::vector<Plane> & airspaceInfo)
+    std::string grid[ROWS][COLUMS];
+    for (int i = 0; i < airspaceInfo.size(); i++)
+    {
+        for (int j = 0; j < ROWS; j++)
         {
-
-            std::string grid[ROWSIZE][COLUMSIZE]; // grid 100000ft x 100000ft with each square being 1000ft
-            // storing into grid
-            for (int i = 0; i < airspaceInfo.size(); i++)
-            {
-                for (int j = 0; j < ROWSIZE; j++)
+            // get y and get x are from Vector3D class
+            if (airspaceInfo[i].getPosition(1) >= (CELLSIZE * j) && airspaceInfo[i].getPosition(1) < (CELLSIZE * (j + 1)))
+            { // checking y
+                for (int k = 0; k < COLUMS; k++)
                 {
-                    // get y and get x are from Vector3D class
-                    if (airspaceInfo[i].getPlaneLocation()[1] >= (CELLSIZE * j) && airspaceInfo[i].getPlaneLocation()[1] < (CELLSIZE * (j + 1)))
-                    { // checking y
-                        for (int k = 0; k < COLUMSIZE; k++)
+                    // only for x
+                    if (airspaceInfo[i].getPosition(0) >= (CELLSIZE * k) && airspaceInfo[i].getPosition(0) < (CELLSIZE * (k + 1)))
+                    { // adding to grid
+                        if (grid[j][k] != "")
                         {
-                            // only for x
-                            if (airspaceInfo[i].getPlaneLocation()[0] >= (CELLSIZE * k) && airspaceInfo[i].getPlaneLocation()[0] < (CELLSIZE * (k + 1)))
-                            { // adding to grid
-                                if (grid[j][k] != "")
-                                {
-                                    grid[j][k] += ",";
-                                }
-                                grid[j][k] += std::to_string(airspaceInfo[i].getAircraftID);
-                            }
+                            grid[j][k] += " & ";
                         }
+                        grid[j][k] += std::to_string(airspaceInfo[i].getAircraftID());
                     }
                 }
             }
-            // printing grid
-            std::stringstream output;
-            for (int i = 0; i < ROWSIZE; i++)
-            {
-                output << std::endl;
-                for (int j = 0; j < COLUMSIZE; j++)
-                {
-                    // Check if grid is empty
-                    if (grid[i][j] == "")
-                    {
-                        output << "| ";
-                    }
-                    else
-                    {
-                        output << "|" + grid[i][j];
-                    }
-                }
-            }
-            output << std::endl;
-            return output.str();
         }
     }
+    // printing grid
+    std::stringstream output;
+    for (int i = 0; i < ROWS; i++)
+    {
+
+        for (int j = 0; j < COLUMS; j++)
+        {
+            // Check if grid is empty
+            if (grid[i][j] == "")
+            {
+                output << "|        ";
+            }
+            else
+            {
+                output << "|";
+                output << grid[i][j] << "    ";
+            }
+        }
+        output << std::endl;
+        for (int i = 0; i < 10 * ROWS; i++)
+        {
+            output << "-";
+        }
+        output << std::endl;
+    }
+    output << std::endl;
+
+    return output.str();
 }
