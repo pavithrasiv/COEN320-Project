@@ -36,7 +36,6 @@ void sendMessageToAirplane(const char* planeChannel, Msg2Airplane message){
 }
 
 
-
 void * communicationMain() {
 	cout << "The communication has begun..." << endl;
 
@@ -61,8 +60,24 @@ void * communicationMain() {
 	while(true) {
 		// Use predefined function MsgReceive()
 		receivedID = MsgReceive(pathChannel->chid, &message, sizeof(message), NULL);
-		cout << "Message received!" << endl;
-//		include the forwarding message by operator to airplane
+		cout << "Message received: " << message.type <<  endl;
+
+		//include the forwarding message by operator to airplane
+
+		//this is where we are going to be handling the messages 
+		if(message.type == "ChangePlaneSpeed"){
+
+		} else if (message.type == "ChangePlanePosition"){
+
+		} else if (message.type == "ChangeAltitude"){
+
+		} else if (message.type == "RequestPlaneData"){
+
+		} else {
+			
+		}
+
+
 	}
 	return NULL;
 }
