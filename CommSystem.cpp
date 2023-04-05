@@ -9,6 +9,33 @@
 
 using namespace std;
 
+void sendMessageToAirplane(const char* planeChannel, Msg2Airplane message){
+	const int serverConnectionID = name_open(airplaneChannel, 0);
+	/*
+	 * We want to close the connection after it is being used, which is going to be 
+	 *freeing up some space after the message is sent
+	*/
+    if (serverConnectionID == -1) {
+        cout << "Communication system error: " << planeChannel <<  " channel was not created\n" << endl;
+        return false;
+    }
+
+	cout << "Communication system is sending a message: " << message.type << "\n" << "to plane: " << message.id << "on channel: " << planeChannel << endl;
+    
+	//int MsgSend(int coid, const void *msg_ptr, int msg_size, void *reply_ptr, int reply_size);
+	const int sendResult = MsgSend(serverConnectionID, &message, sizeof(message), nullptr, 0);
+
+    if (sendResult == -1) {
+		cout << "Communication system error: " << planeChannel << " channel message was not sent /n" << endl;
+        return false;
+    }
+
+	name_close(serverConnectionID);
+
+    return true;
+}
+
+
 void * communicationMain() {
 	cout << "The communication has begun..." << endl;
 
@@ -33,13 +60,29 @@ void * communicationMain() {
 	while(true) {
 		// Use predefined function MsgReceive()
 		receivedID = MsgReceive(pathChannel->chid, &message, sizeof(message), NULL);
-		cout << "Message received!" << endl;
-//		include the forwarding message by operator to airplane
+		cout << "Message received: " << message.type <<  endl;
+
+		//include the forwarding message by operator to airplane
+
+		//this is where we are going to be handling the messages 
+		if(message.type == "ChangePlaneSpeed"){
+
+		} else if (message.type == "ChangePlanePosition"){
+
+		} else if (message.type == "ChangeAltitude"){
+
+		} else if (message.type == "RequestPlaneData"){
+
+		} else {
+			
+		}
+
+
 	}
 	return NULL;
 }
 
-pthread_t createCommunication() {
+pthread_t createCommunicationThread() {
 	int receivedComm;
 	pthread_t thread;
 	pthread_attr_t attribute;
