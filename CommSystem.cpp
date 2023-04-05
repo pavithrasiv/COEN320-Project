@@ -39,6 +39,39 @@ void * communicationMain() {
 	return NULL;
 }
 
+void CommSystem::sendMessage(int chid, const void *msg, int size) {
+    int rcvid;
+    struct _msg_info info;
+
+    // Send message using MsgSend
+    int status = MsgSend(chid, msg, size, NULL, 0);
+
+    // Check for errors
+    if (status == -1) {
+        std::cerr << "Error sending message" << std::endl;
+        return;
+    }
+
+    // Wait for reply
+    rcvid = MsgReceive(chid, NULL, 0, &info);
+
+    // Check for errors
+    if (rcvid == -1) {
+        cout << "Error receiving reply" << std::endl;
+        return;
+    }
+}
+
+void CommSystem::disconnectFromChannel(int coid) {
+    int status = ConnectDetach(coid);
+    if (status == -1) {
+        // Handle error
+        cout<< "Error detaching connection" << endl;
+    }
+}
+
+
+
 pthread_t createCommunication() {
 	int receivedComm;
 	pthread_t thread;

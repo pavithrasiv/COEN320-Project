@@ -31,6 +31,7 @@ private:
     int velocity[3];
     int arrivalTime;
     bool outsideAirspace;
+    int chid; //this is going to be channel ID in order to establish communication
 };
 
 vector<PlaneClass> readPlanesFromFile(string fileName);
