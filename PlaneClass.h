@@ -35,4 +35,5 @@ private:
 
 vector<PlaneClass> readPlanesFromFile(string fileName);
 void* PlaneClientThread(void *);
+void* TimerReceiverThread(void *);
 #endif // PLANE_H
