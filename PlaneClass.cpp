@@ -43,6 +43,12 @@ typedef struct _plane_data {
     bool ArrivedYet;
 } plane_data_t;
 
+//Format of plane
+typedef struct _time_data {
+	msg_header_t hdr;
+	int time;
+} time_data_t;
+
 
 void* PlaneClientThread(void *)
 {
@@ -135,6 +141,98 @@ void* PlaneClientThread(void *)
 	return EXIT_SUCCESS;
 }
 
+
+void* TimerReceiverThread(void *) {
+
+	name_attach_t *name_attach_t;
+
+	//Instantiate message based on structure
+	time_data_t msg;
+
+	//Create receive ID
+	int rcvid;
+
+	//To create a channel, and attach it to server : name_attach_t =
+	//name_attach(dispatch_t * dpp, const char * path, unsigned flags);
+	//Path is the name of the channel
+	if ((name_attach_t = name_attach(NULL, ATTACH_POINT, 0)) == NULL){
+			perror("Error occurred during creation of channel");
+	}
+
+		while(true){
+			//Server will block until it receives message from client through
+			//a channel named "name_attach_t" which was created with name_attach(..)
+			//The received message will be stored in msg and rcvid
+			rcvid = MsgReceive(name_attach_t->chid, &msg, sizeof(msg), NULL);
+			//In case of error
+			if(rcvid == -1) {
+				perror("Error receiving message");
+				break;
+			}
+
+			//Else, if properly received message/pulse
+			//Pulse signal actions depending on code
+			if (rcvid == 0) {/* Pulse received */
+						switch (msg.hdr.code) {
+						case _PULSE_CODE_DISCONNECT:
+							/*
+							 * A client disconnected all its connections (called
+							 * name_close() for each name_open() of our name) or
+							 * terminated
+							 */
+							ConnectDetach(msg.hdr.scoid);
+							break;
+						case _PULSE_CODE_UNBLOCK:
+							/*
+							 * REPLY blocked client wants to unblock (was hit by
+							 * a signal or timed out).  It's up to you if you
+							 * reply now or later.
+							 */
+							break;
+						default:
+							/*
+							 * A pulse sent by one of your processes or a
+							 * _PULSE_CODE_COIDDEATH or _PULSE_CODE_THREADDEATH
+							 * from the kernel?
+							 */
+							break;
+						}
+						continue;
+					}
+
+			//name_open() sends a connect message, must EOK this */
+			if (msg.hdr.type == _IO_CONNECT ) {
+				MsgReply( rcvid, EOK, NULL, 0 );
+				continue;
+			}
+
+			/* Some other QNX IO message was received; reject it */
+			if (msg.hdr.type > _IO_BASE && msg.hdr.type <= _IO_MAX ) {
+						MsgError( rcvid, ENOSYS );
+						continue;
+				}
+			if (msg.hdr.type == 0x00){
+					//Motion message received
+					//0x01 is subtype for velocity
+					if (msg.hdr.subtype == 0x01){
+						cout << "Time is : " << msg.time << endl;
+					}
+					else{
+						MsgError(rcvid, ENOSYS);
+						continue;
+					}
+				}
+
+				MsgReply(rcvid, EOK, 0, 0);
+				}
+
+
+
+				name_detach(name_attach_t, 0);
+
+				return NULL;
+
+}
 
 
 
