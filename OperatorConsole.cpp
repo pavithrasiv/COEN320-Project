@@ -73,7 +73,6 @@ void OperatorConsole::storeCommands() {
 	if(!inputFile)
 	{
 		cout << "ERROR: The file cannot be opened." << endl;
-		return false;
 	}
 
 	cout << "The commands are being read..." << endl;
@@ -87,7 +86,6 @@ void OperatorConsole::storeCommands() {
 	}
 	
 	inputFile.close();
-	return true;
 }
 
 void OperatorConsole::fetchPlaneData(Plane* plane) {

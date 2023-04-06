@@ -1,13 +1,15 @@
 #include "CommSystem.h"
+#include "PlaneClass.h"
 #include <unistd.h>
 #include <iostream>
 #include <string>
 #include <sys/iofunc.h>
 #include <sys/dispatch.h>
-#include "Structure.h"
 #include <pthread.h>
 
 using namespace std;
+
+typedef struct _pulse msg_header_t;
 
 void * communicationMain() {
 	cout << "The communication has begun..." << endl;
@@ -19,7 +21,7 @@ void * communicationMain() {
 	// To register a name in the pathname space and create a channel
 	name_attach_t *pathChannel;
 
-	Msg2CommSys message;
+	PlaneClass message();
 
 	int receivedID;
 
@@ -32,7 +34,7 @@ void * communicationMain() {
 
 	while(true) {
 		// Use predefined function MsgReceive()
-		receivedID = MsgReceive(pathChannel->chid, &message, sizeof(message), NULL);
+		receivedID = MsgReceive(pathChannel->chid, &message, message.size(), NULL);
 		cout << "Message received!" << endl;
 //		include the forwarding message by operator to airplane
 	}
@@ -41,7 +43,7 @@ void * communicationMain() {
 
 
 
-void CommSystem::disconnectFromChannel(int coid) {
+void disconnectFromChannel(int coid) {
     int status = ConnectDetach(coid);
     if (status == -1) {
         // Handle error
@@ -59,12 +61,7 @@ pthread_t createCommunication() {
 
 	receivedComm = pthread_attr_setdetachstate(&attribute, PTHREAD_CREATE_JOINABLE);
 
-//	receivedComm = pthread_create(&thread, &attribute, communicationMain, NULL);
-//
-//	if (receivedComm != 0) {
-//	        cerr << "Failed to create thread" << endl;
-//	        exit(EXIT_FAILURE);
-//	    }
+
 	return thread;
 
 }
@@ -89,7 +86,7 @@ void sendMessage(int chid, const void *msg, int size) {
     receivedID = MsgReceive(chid, NULL, 0, &info);
 
     // Check for errors
-    if (rcvid == -1) {
+    if (receivedID == -1) {
         std::cout << "Error receiving reply" << endl;
         return;
     }
