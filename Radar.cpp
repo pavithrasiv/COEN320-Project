@@ -21,6 +21,13 @@ void Radar::sendRadarScan(std::vector<Plane> planes)
     [
         int coid = ConnectAttach(0, 0, planes[i].getChannelID(), _NTO_SIDE_CHANNEL, 0);
         Plane msg;
+
+        //sending the message 
+        CommSystem::sendMessage(coid, &msg, sizeof(msg));
+
+        //disconnecting from the channel 
+        CommSystem::disconnectFromChannel(coid);
+
     ]
 
     // Declare channel

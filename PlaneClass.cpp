@@ -2,6 +2,12 @@
 #include <sstream>
 #include <iostream>
 #include <vector>
+#include <stdio.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/dispatch.h>
+#include <sys/neutrino.h>
 #define MIN_AIRSPACE_X_REGION 0
 #define MAX_AIRSPACE_X_REGION 100000
 #define MIN_AIRSPACE_Y_REGION 0
@@ -26,6 +32,14 @@ typedef struct _my_data {
 	msg_header_t hdr;
 	double data;
 } my_data_t;
+
+//Format of plane
+typedef struct _plane_data {
+	msg_header_t hdr;
+	int velocity[3];
+	int position[3];
+	//bool airspace;
+} plane_data_t;
 
 
 //The Server
@@ -215,6 +229,200 @@ void* client(void *){
 	return EXIT_SUCCESS;
 }
 
+
+void* PlaneClientThread(void *)
+{
+	//plane_data_t velocity_msg;
+	//plane_data_t position_msg;
+	plane_data_t airspace_msg;
+
+	//Server connection ID
+	int radarserver_coid;
+
+	//First, the client must open a channel to connect to server
+	//use int name_open(const char * name, int flags);
+	//where name is the name of the channel created by the server
+	//flags are parameters that affect the function’s behavior (use 0)
+	if ((radarserver_coid = name_open(ATTACH_POINT, 0)) == -1) {
+			perror("Error occurredz while attaching the channel");
+		}
+
+	vector<PlaneClass> planes = readPlanesFromFile("./planes.txt");
+	uint32_t period_sec=1;
+	double period=period_sec;
+	Timer timer(period_sec,period_sec);
+	int count=0;
+	double t = 0;
+
+	while(t<30.0){
+		t=count*period;
+					for (PlaneClass& plane : planes) {
+					if (plane.getArrivalTime() > t){
+						cout << "Plane ID " << plane.getAircraftID() << " hasn't arrived yet!" <<endl;
+					}
+					else{
+						cout << "Update\n";
+					    cout << "For plane ID: " << plane.getAircraftID() <<  endl;
+					    plane.update();
+					    cout << "Position: (" << plane.getPosition(0) << ", " << plane.getPosition(1) << ", " << plane.getPosition(2) << ")" << endl;
+					    cout << "Velocity: (" << plane.getVelocity(0) << ", " << plane.getVelocity(1) << ", " << plane.getVelocity(2) << ")" << endl;
+					    if (plane.insideAirspace()){
+					    	cout << "Plane is outside airspace!" << endl;
+					    }
+						//Define types and subtypes
+						airspace_msg.hdr.type=0x00;
+						airspace_msg.hdr.subtype=0x01;
+						for (int i = 0; i < 3; i++) {
+						    airspace_msg.velocity[i] = plane.getVelocity(i);
+						    airspace_msg.position[i] = plane.getPosition(i);
+						}
+
+						//Define types and subtypes
+						//airspace_msg.hdr.type=0x00;
+						//airspace_msg.hdr.subtype=0x02;
+						//airspace_msg.position=positionTrue;
+						//airspace_msg.hdr.type=0x00;
+						//airspace_msg.hdr.subtype=0x03;
+						//airspace_msg.airspace=positionTrue;
+					    if (MsgSend(radarserver_coid, &airspace_msg, sizeof(airspace_msg), NULL,0) == -1){
+					    	perror("Error sending speed message");
+					    	break;
+					    		}
+					}
+					}
+					cout << "Time is " << t << endl;
+					timer.wait_next_activation();
+					count++;
+
+	}
+
+	//Finally, close connection with server when done
+	//int name_close(int coid);
+	//coid is the connection ID returned by name_open() function
+	name_close(radarserver_coid);
+	return EXIT_SUCCESS;
+}
+
+void* radarserverthread(void*) {
+	//Name of attach value for the channel and connection
+	name_attach_t *name_attach_t;
+
+	//Instantiate message based on structure
+	plane_data_t msg;
+
+	//Create receive ID
+	int rcvid;
+
+	//To create a channel, and attach it to server : name_attach_t =
+	//name_attach(dispatch_t * dpp, const char * path, unsigned flags);
+	//Path is the name of the channel
+	if ((name_attach_t = name_attach(NULL, ATTACH_POINT, 0)) == NULL){
+			perror("Error occurred during creation of channel");
+	}
+
+	//To receive a message from the client
+	//int MsgReceive(int chid, void * msg, size_t size, struct _msg_info * info);
+	//chid is the channel ID of the server
+	//*msg is the pointer to the variable where the message will be stored
+	//size is the size in bytes of msg
+	//*info is a NULL, or a pointer to a msg_info structure
+	//Do MsgReceive here with the chid in a while(true) loop
+	while(true){
+		//Server will block until it receives message from client through
+		//a channel named "name_attach_t" which was created with name_attach(..)
+		//The received message will be stored in msg and rcvid
+		rcvid = MsgReceive(name_attach_t->chid, &msg, sizeof(msg), NULL);
+		//In case of error
+		if(rcvid == -1) {
+			perror("Error receiving message");
+			break;
+		}
+
+		//Else, if properly received message/pulse
+		//Pulse signal actions depending on code
+		if (rcvid == 0) {/* Pulse received */
+					switch (msg.hdr.code) {
+					case _PULSE_CODE_DISCONNECT:
+						/*
+						 * A client disconnected all its connections (called
+						 * name_close() for each name_open() of our name) or
+						 * terminated
+						 */
+						ConnectDetach(msg.hdr.scoid);
+						break;
+					case _PULSE_CODE_UNBLOCK:
+						/*
+						 * REPLY blocked client wants to unblock (was hit by
+						 * a signal or timed out).  It's up to you if you
+						 * reply now or later.
+						 */
+						break;
+					default:
+						/*
+						 * A pulse sent by one of your processes or a
+						 * _PULSE_CODE_COIDDEATH or _PULSE_CODE_THREADDEATH
+						 * from the kernel?
+						 */
+						break;
+					}
+					continue;
+				}
+
+		//name_open() sends a connect message, must EOK this */
+		if (msg.hdr.type == _IO_CONNECT ) {
+			MsgReply( rcvid, EOK, NULL, 0 );
+			continue;
+		}
+
+		/* Some other QNX IO message was received; reject it */
+		if (msg.hdr.type > _IO_BASE && msg.hdr.type <= _IO_MAX ) {
+					MsgError( rcvid, ENOSYS );
+					continue;
+			}
+
+	//Reply to client error case
+	//Use this if message received not in expected format
+	//int MsgError(int rcvid, int error)
+	//rcvid is the output of receive function
+	//error can be set to -1, ENOSYS, ERESTART, EOK, or the error code that you want to set for the client
+	//First check if msg is what we expect
+	//Then you can have a switch that checks subtype of message (like 0x01 for speed, 0x02 for temperature, etc)
+	//Build GUI output based on the msg subtypes
+	//0x00 will be for data
+	if (msg.hdr.type == 0x00){
+		//Motion message received
+		//0x01 is subtype for velocity
+		if (msg.hdr.subtype == 0x01){
+			//printf("The velocity of the plane is  %.2f m/s \n", data);
+			cout << "Velocity received from plane thread: (" << msg.velocity[0] << ", " << msg.velocity[1] << ", " << msg.velocity[2] << ")" << endl;
+			cout << "Position received from plane thread: (" << msg.position[0] << ", " << msg.position[1] << ", " << msg.position[2] << ")" << endl;
+		}
+		else if (msg.hdr.subtype == 0x02){
+			//printf("The velocity of the plane is  %.2f m/s \n", data);
+			cout << "Position received from plane thread: (" << msg.position[0] << ", " << msg.position[1] << ", " << msg.position[2] << ")" << endl;
+		}
+		else{
+			MsgError(rcvid, ENOSYS);
+			continue;
+		}
+	}
+
+	MsgReply(rcvid, EOK, 0, 0);
+	}
+
+
+	//Finally, to destroy a channel
+	//Do int name_detach(name_attach_t * attach, unsigned flags);
+	//attach is a pointer to the attach object received as output of the name_attach(…) function
+	//flags are parameters that affect function’s behavior (just use 0)
+	name_detach(name_attach_t, 0);
+
+	return NULL;
+}
+
+
+
+
 void TimerStart(vector<PlaneClass> planes){
 	uint32_t period_sec=1;
 	double period=period_sec;
@@ -233,6 +441,9 @@ void TimerStart(vector<PlaneClass> planes){
 			    plane.update();
 			    cout << "Position: (" << plane.getPosition(0) << ", " << plane.getPosition(1) << ", " << plane.getPosition(2) << ")" << endl;
 			    cout << "Velocity: (" << plane.getVelocity(0) << ", " << plane.getVelocity(1) << ", " << plane.getVelocity(2) << ")" << endl;
+			    if (plane.insideAirspace()){
+			    	cout << "Plane is outside airspace!" << endl;
+			    }
 			}
 			}
 			cout << "Time is " << t << endl;
@@ -249,35 +460,7 @@ void PlaneClass::update(){
 
 }
 
-void PlaneClass::updatePlaneLocation(){
-	uint32_t period_sec=1;
-	double period=period_sec;
-	Timer timer(period_sec,period_sec);
-	int count=0;
-	double t = 0;
 
-
-	while(t<30.0){
-		t=count*period;
-		if (arrivalTime > t){
-			cout << "Plane ID " << getAircraftID() << " hasn't arrived yet! Time is " << t << endl;
-		}
-		else{
-			cout << "Update\n";
-		    cout << "For plane ID: " << getAircraftID() << ". Time is " << t << endl;
-		    positionTrue[0] += velocity[0];
-		    positionTrue[1] += velocity[1];
-		    positionTrue[2] += velocity[2];
-		    cout << "Position: (" << getPosition(0) << ", " << getPosition(1) << ", " << getPosition(2) << ")" << endl;
-		    cout << "Velocity: (" << getVelocity(0) << ", " << getVelocity(1) << ", " << getVelocity(2) << ")" << endl;
-		}
-
-		timer.wait_next_activation();
-		count++;
-	}
-
-
-}
 
 PlaneClass::PlaneClass(int id, int posX, int posY, int posZ, int velX, int velY, int velZ, int time)
 {
@@ -290,8 +473,6 @@ PlaneClass::PlaneClass(int id, int posX, int posY, int posZ, int velX, int velY,
     velocity[2] = velZ;
     aircraftID = id;
     arrivalTime = time;
-
-	CommSystem::registerChannel(&chid);
 }
 
 int PlaneClass::getAircraftID() const {
@@ -312,6 +493,7 @@ int PlaneClass::getPosition(int posValue) const {
     else if (posValue==2){
     	return positionTrue[2];
     }
+    else return 0;
 }
 
 int PlaneClass::getVelocity(int posValue) const {
@@ -324,6 +506,19 @@ int PlaneClass::getVelocity(int posValue) const {
     else if (posValue==2){
     	return velocity[2];
     }
+    else return 0;
+}
+
+bool PlaneClass::insideAirspace(){
+
+	    if (positionTrue[0] < MIN_AIRSPACE_X_REGION || positionTrue[0] > MAX_AIRSPACE_X_REGION || positionTrue[1] < MIN_AIRSPACE_Y_REGION || positionTrue[1] > MAX_AIRSPACE_Y_REGION || positionTrue[2] < MAX_AIRSPACE_Z_REGION || positionTrue[2] > MAX_AIRSPACE_Z_REGION)
+	    {
+	        outsideAirspace = true;
+	    }
+	    else {
+	    	outsideAirspace = false;
+	    }
+	    return outsideAirspace;
 }
 
 PlaneClass::~PlaneClass() {
@@ -333,58 +528,6 @@ PlaneClass::~PlaneClass() {
     }
 
 }
-
-int main(int argc, char*argv[]){
-	char cwd[256];
-	    if (getcwd(cwd, sizeof(cwd)) != NULL) {
-	        std::cout << "Current working directory is: " << cwd << std::endl;
-	    } else {
-	        std::perror("getcwd() error");
-	    }
-	vector<PlaneClass> planes = readPlanesFromFile("./planes.txt");
-	for (const auto& plane : planes) {
-	    cout << "ID: " << plane.getAircraftID() << endl;
-	    cout << "Arrival Time: " << plane.getArrivalTime() << endl;
-	    cout << "Position: (" << plane.getPosition(0) << ", " << plane.getPosition(1) << ", " << plane.getPosition(2) << ")" << endl;
-	    cout << "Velocity: (" << plane.getVelocity(0) << ", " << plane.getVelocity(1) << ", " << plane.getVelocity(2) << ")" << endl;
-	}
-
-	//for (PlaneClass& plane : planes) {
-	//    plane.updatePlaneLocation();
-	//}
-
-	TimerStart(planes);
-
-
-	//Declare thread
-	pthread_t server_thread;
-	int err_no;
-	err_no = pthread_create(&server_thread, NULL, &server, NULL);
-	if (err_no != 0){
-		perror("Error creating server thread! \n");
-	}
-
-	pthread_t client_thread;
-	err_no = pthread_create(&client_thread, NULL, &client, NULL);
-	if (err_no != 0){
-		perror("Error creating client thread! \n");
-	}
-
-	//Join thread to start it
-	err_no = pthread_join(server_thread, NULL);
-	if (err_no != 0){
-		perror("Error joining server thread!");
-	}
-
-	err_no = pthread_join(client_thread, NULL);
-	if (err_no != 0){
-		perror("Error joining client thread!");
-	}
-	pthread_exit(EXIT_SUCCESS);
-	return 0;
-}
-
-
 
 vector<PlaneClass> readPlanesFromFile(string fileName) {
     vector<PlaneClass> planes;
@@ -425,6 +568,55 @@ vector<PlaneClass> readPlanesFromFile(string fileName) {
 }
 
 
+
+
+
+int main(int argc, char*argv[]){
+	//char cwd[256];
+	//    if (getcwd(cwd, sizeof(cwd)) != NULL) {
+	//        std::cout << "Current working directory is: " << cwd << std::endl;
+	//    } else {
+	//        std::perror("getcwd() error");
+	//    }
+
+	//vector<PlaneClass> planes = readPlanesFromFile("./planes.txt");
+	//for (const auto& plane : planes) {
+	//    cout << "ID: " << plane.getAircraftID() << endl;
+	//    cout << "Arrival Time: " << plane.getArrivalTime() << endl;
+	//    cout << "Position: (" << plane.getPosition(0) << ", " << plane.getPosition(1) << ", " << plane.getPosition(2) << ")" << endl;
+	//    cout << "Velocity: (" << plane.getVelocity(0) << ", " << plane.getVelocity(1) << ", " << plane.getVelocity(2) << ")" << endl;
+	//}
+
+	//TimerStart(planes);
+
+
+	//Declare thread
+	pthread_t server_thread;
+	int err_no;
+	err_no = pthread_create(&server_thread, NULL, &radarserverthread, NULL);
+	if (err_no != 0){
+		perror("Error creating server thread! \n");
+	}
+
+	pthread_t client_thread;
+	err_no = pthread_create(&client_thread, NULL, &PlaneClientThread, NULL);
+	if (err_no != 0){
+		perror("Error creating client thread! \n");
+	}
+
+	//Join thread to start it
+	err_no = pthread_join(server_thread, NULL);
+	if (err_no != 0){
+		perror("Error joining server thread!");
+	}
+
+	err_no = pthread_join(client_thread, NULL);
+	if (err_no != 0){
+		perror("Error joining client thread!");
+	}
+	pthread_exit(EXIT_SUCCESS);
+	return 0;
+}
 
 
 

@@ -39,6 +39,17 @@ void * communicationMain() {
 	return NULL;
 }
 
+
+
+void CommSystem::disconnectFromChannel(int coid) {
+    int status = ConnectDetach(coid);
+    if (status == -1) {
+        // Handle error
+        cout<< "Error detaching connection" << endl;
+    }
+}
+
+
 pthread_t createCommunication() {
 	int receivedComm;
 	pthread_t thread;
@@ -56,4 +67,30 @@ pthread_t createCommunication() {
 //	    }
 	return thread;
 
+}
+
+void sendMessage(int chid, const void *msg, int size) {
+
+	//plane, sending id and client id 
+
+    int receivedID;
+    struct _msg_info info;
+
+    // Send message using MsgSend
+    int status = MsgSend(chid, msg, size, NULL, 0);
+
+    // Check for errors
+    if (status == -1) {
+        std::cout << "Error sending message" << endl;
+        return;
+    }
+
+    // Wait for reply
+    receivedID = MsgReceive(chid, NULL, 0, &info);
+
+    // Check for errors
+    if (rcvid == -1) {
+        std::cout << "Error receiving reply" << endl;
+        return;
+    }
 }
