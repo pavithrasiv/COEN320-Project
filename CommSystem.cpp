@@ -6,10 +6,17 @@
 #include <sys/iofunc.h>
 #include <sys/dispatch.h>
 #include <pthread.h>
+#include <vector.h>
+
 
 using namespace std;
 
 typedef struct _pulse msg_header_t;
+
+// CommSystem::CommSystem(vector [] planes){
+// 	PlaneClass pc = new PlaneClass();
+
+// }
 
 void * communicationMain() {
 	cout << "The communication has begun..." << endl;
@@ -68,7 +75,9 @@ pthread_t createCommunication() {
 
 void sendMessage(int chid, const void *msg, int size) {
 
-	//plane, sending id and client id 
+	// //plane, sending id and client id 
+	// PlaneClass pc; 
+	// pc.getAircraftID();
 
     int receivedID;
     struct _msg_info info;
@@ -90,4 +99,16 @@ void sendMessage(int chid, const void *msg, int size) {
         std::cout << "Error receiving reply" << endl;
         return;
     }
+}
+
+//this is going to be sending the message in terms of the velocity
+void CommSystem::sendMessage(){
+	string filenName;
+	vector<PlaneClass> planes = readPlanesFromFile(fileName);
+
+	for(int i =0; i< planes.size(); i++){
+
+	}
+
+
 }
