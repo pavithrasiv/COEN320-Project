@@ -18,7 +18,7 @@ public:
     PlaneClass(int id, int posX, int posY, int posZ, int velX, int velY, int velZ, int time);
     void ThreadPlaneTimerStart();
     void update();
-    bool insideAirspace();
+    bool outsideAirspace();
     int getAircraftID() const;
     int getArrivalTime() const;
     int getPosition(int posValue) const;
@@ -30,9 +30,9 @@ private:
     int positionTrue[3];
     int velocity[3];
     int arrivalTime;
-    bool outsideAirspace;
+    bool outsideAirspaceStatus;
 };
 
 vector<PlaneClass> readPlanesFromFile(string fileName);
-
+void* PlaneClientThread(void *);
 #endif // PLANE_H
