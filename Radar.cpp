@@ -155,7 +155,7 @@ void* radarserverthread(void*) {
 }
 
 
-int main(int argc, char*argv[]){
+int mainz(int argc, char*argv[]){
 	//char cwd[256];
 	//    if (getcwd(cwd, sizeof(cwd)) != NULL) {
 	//        std::cout << "Current working directory is: " << cwd << std::endl;
