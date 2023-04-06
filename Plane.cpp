@@ -290,6 +290,8 @@ PlaneClass::PlaneClass(int id, int posX, int posY, int posZ, int velX, int velY,
     velocity[2] = velZ;
     aircraftID = id;
     arrivalTime = time;
+
+	CommSystem::registerChannel(&chid);
 }
 
 int PlaneClass::getAircraftID() const {
