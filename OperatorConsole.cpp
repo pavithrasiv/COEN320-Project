@@ -1,5 +1,5 @@
 #include "OperatorConsole.h"
-#include "Plane.h"
+#include "PlaneClass.h"
 #include "CommSystem.h"
 #include <iostream>
 #include <string>
@@ -10,26 +10,54 @@
 using namespace std;
 
 OperatorConsole::OperatorConsole() {
-	//	receivedComm = pthread_create(&thread, &attribute, communicationMain, NULL);
-	// cout << "Creating the operator console thread has failed..."
+	receivedComm(false);
+	compSystem(nullptr);
 }
 
 void OperatorConsole::changeSpeed(int id, double s) {
-	Plane planeID;
-	Plane *velocity[3];
-	
+	PlaneClass* plane = null;
 
-
+	for(int i = 0; i < plane.size(); i++) {
+		if(plane[i].getId() == id) {
+			plane = &planes[i];
+		}
+	}
+	// Verify if the plane exists in the list of planes
+	if(plane = null) {
+		cout << "This aircraft is not found" << endl;
+	}
+	// Change the speed to the new one
+	plane -> setSpeed(s);
 }
 
 void OperatorConsole::changeAltitude(int id, int a) {
-	int opConsoleID;
-	Msg2CommSys messageCompSys;
+	PlaneClass* plane = null;
+	for(int i = 0; i < plane.size(); i++) {
+		if(plane[i].getId() == id) {
+			plane = &plane[i];
+		}
+	}
+	// Verify if the plane exists in the list of planes
+	if(plane == null) {
+		cout << "This aircraft is not found" << endl;
+	}
+	// Change the altitude to the new one
+	plane -> setAltitude(a);
 }
 
 void OperatorConsole::changePosition(int id, float orient) {
-	Plane planeID;
-	Plane *position[3];
+	PlaneClass* plane = null;
+	for(int i = 0; i < plane.size(); i++) {
+		if(plane[i].getId() == id) {
+			plane = &plane[i];
+		}
+	}
+	// Verify if the plane exists in the list of planes
+	if(plane == null) {
+		cout << "This aircraft is not found" << endl;
+	}
+	// Change the position/orientation to the new one
+	plane -> setOrientation(orient);
 }
 
 void OperatorConsole::storeCommands() {
@@ -72,14 +100,14 @@ void OperatorConsole::sendMessage(CompSystem* compSystem, int planeID) {
 
 void OperatorConsole::printDetails(int id) {
 
-	cout << "The aircraft's ID is the following: " << planeID << endl;
-	cout << "The aircraft's new flight level: " << endl;
-	cout << "The aircraft's new speed: " << velocity[3] << endl;
-	cout << "The aircraft's new position: " << position[3] << endl;
+	cout << "The aircraft's ID is the following: " << getId() << endl;
+	cout << "The aircraft's new flight level: " << getAltitude() << endl;
+	cout << "The aircraft's new speed: " << getSpeed() << endl;
+	cout << "The aircraft's new position: " << getPosition() << endl;
 }
 
 void* OperatorConsole::threadOpConsole(void* arg) {
-	OperatorConsole &operatorConsole = *((OperatorConsole*)arg);
+	// OperatorConsole &operatorConsole = *((OperatorConsole*)arg);
 
 	// Run through the commands for a specific plane ID until it is no longer this ID that sends commands
 	Plane planeID;
