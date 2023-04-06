@@ -40,4 +40,7 @@ public:
 
 };
 
+void* TimerThread(void *);
+
+
 #endif
