@@ -1,4 +1,30 @@
 #include "Timer.h"
+#include <fstream>
+#include <sstream>
+#include <iostream>
+#include <vector>
+#include <stdio.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/dispatch.h>
+#include <sys/neutrino.h>
+#define ATTACH_POINT "my_channel"
+using namespace std;
+#include "PlaneClass.h"
+
+//Message header is at least a pulse
+//This identifies the message that is being sent and received
+//Unique ID for it basically
+typedef struct _pulse msg_header_t;
+
+//Format of plane
+typedef struct _time_data {
+	msg_header_t hdr;
+	int time;
+} time_data_t;
+
+
 
 Timer::Timer(int offset, int period) {
 
@@ -40,6 +66,67 @@ void Timer::wait_next_activation() {
 	sigwait(&sig_set, &dummy);
 }
 
+void* TimerThread(void *) {
+	time_data_t time_msg;
+
+	int planeclient_coid;
+	if ((planeclient_coid = name_open(ATTACH_POINT, 0)) == -1) {
+				perror("Error occurred while attaching the channel");
+				}
+
+	uint32_t period_sec=1;
+	double period=period_sec;
+	Timer timer(period_sec,period_sec);
+	int count=0;
+	double t = 0;
+	time_msg.hdr.type=0x00;
+	time_msg.hdr.subtype=0x01;
+	while(t<30.0){
+		t=count*period;
+		time_msg.time = t;
+		if (MsgSend(planeclient_coid, &time_msg, sizeof(time_msg), NULL,0) == -1){
+							    	perror("Error sending speed message");
+							    	break;
+							    		}
+		timer.wait_next_activation();
+		count++;
+		}
+
+
+}
+
+
 Timer::~Timer() {
 	// TODO Auto-generated destructor stub
+}
+
+
+int main(int argc, char*argv[]){
+
+	//Declare thread
+		pthread_t timerreceiver_thread;
+		int err_no;
+		err_no = pthread_create(&timerreceiver_thread, NULL, &TimerReceiverThread, NULL);
+		if (err_no != 0){
+			perror("Error creating server thread! \n");
+		}
+
+		pthread_t timersender_thread;
+		err_no = pthread_create(&timersender_thread, NULL, &TimerThread, NULL);
+		if (err_no != 0){
+			perror("Error creating client thread! \n");
+		}
+
+		//Join thread to start it
+		err_no = pthread_join(timerreceiver_thread, NULL);
+		if (err_no != 0){
+			perror("Error joining server thread!");
+		}
+
+		err_no = pthread_join(timersender_thread, NULL);
+		if (err_no != 0){
+			perror("Error joining client thread!");
+		}
+		pthread_exit(EXIT_SUCCESS);
+		return 0;
 }
