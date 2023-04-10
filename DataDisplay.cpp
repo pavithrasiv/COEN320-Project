@@ -13,22 +13,17 @@
 #define CELLSIZE 25
 
 #define WARNING 1
-#define GRID 2
-#define LOG 3
+#define PLANE 2
+#define GRID 3
+#define LOG 4
 DataDisplay::DataDisplay() : channelID(-1) fd(-1)
 {
 }
 
-int DataDisplay::getChannelID() const
-{
-    return channelID;
-}
-
-void DataDisplay::run()
+void DataDisplay::begin()
 {
     // get Channel for command
-    int commandChannelID = channelCreate(0);
-    int planeChannelID = channelCreate(1);
+    channelID = channelCreate(0);
 
     // TODO: get Channel from Plane
     if (channelID == -1)
@@ -48,29 +43,39 @@ void DataDisplay::run()
 void DataDisplay::receiveMessage()
 {
     int receiveMessageID; // receive id
-    int planeMessageID;
-    int vectorPlanesID; //
+    planeInfo msg;
     while (1)
     {
-        planeMessageID = MsgReceive(commandChannelID, &msg, sizeof(msg), NULL); // get id for warning 1 plane
-        vectorPlanesID = MsgReceive(planeChannelID, planeInfo, sizeof(planeInfo), NULL);
+        receiveMessageID = MsgReceive(channelID, msg, sizeof(msg), NULL);
 
-        switch (planeInfo.command)
+        switch (msg.command)
         {
         case WARNING:
         {
             // Command to display Warning of one plane
-            MsgReply(receiveMessageID, EOK, NULL, 0); // sending basic ACK
-            std::cout << "WARNING: Aircraft ID: " << msg.getAircraftID()
+            MsgReply(receiveMessageID, EOK, NULL, 0); // sending ACK
+            std::cout << "WARNING: Aircraft ID: " << msg.singlePlane.getAircraftID()
                       << std::endl
-                      << "Aircraft position: "
-                      << msg.getPlaneLocation()
+                      << "Aircraft position x: " << msg.singlePlane.getPosition(0) << "y: " << msg.singlePlane.getPosition(1) << "z: " << msg.singlePlane.getPosition(2)
                       << std::endl
-                      << "Aircraft velocity " << msg.getPlaneVelocity() << "is on a TRAJECTORY TO CRASH!"
+                      << "Aircraft velocity x: " << msg.singlePlane.getVelocity(0) << "y: " << msg.singlePlane.getVelocity(1) << "z: " << msg.singlePlane.getVelocity(2)
+                      << " is on a TRAJECTORY TO CRASH!"
+                      << std::endl;
+            break;
+        }
+        case PLANE:
+        {
+            MsgReply(receiveMessageID, EOK, NULL, 0); // sending ACK
+            std::cout << "Aircraft ID: " << msg.singlePlane.getAircraftID()
+                      << std::endl
+                      << "Aircraft position x: " << msg.singlePlane.getPosition(0) << "y: " << msg.singlePlane.getPosition(1) << "z: " << msg.singlePlane.getPosition(2)
+                      << std::endl
+                      << "Aircraft velocity x: " << msg.singlePlane.getVelocity(0) << "y: " << msg.singlePlane.getVelocity(1) << "z: " << msg.singlePlane.getVelocity(2)
                       << std::endl;
             break;
         }
         case GRID: // Top View grid (X and Y)
+
         {
             std::cout << generateGrid(planeInfo.planes);
             MsgReply(vectorPlanesID, EOK, NULL, 0);
@@ -80,7 +85,7 @@ void DataDisplay::receiveMessage()
         {
             // Command to print a grid to the log file
             char buff[] = generateGrid(planeInfo.planes);
-            MsgReply(vectorPlanesID, EOK, NULL, 0);
+            MsgReply(receiveMessageID, EOK, NULL, 0);
             size_written = write(fd, buff, sizeof(buff));
             if (size_written != sizeof(buff))
             {
