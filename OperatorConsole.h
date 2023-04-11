@@ -12,13 +12,13 @@ class OperatorConsole {
 		OperatorConsole();
 
 		// Thread
-		void* threadOpConsole(void* arg);
+		void* operatorMain(void* arg);
 
 		// Store the commands in a vector
 		void storeCommands();
 
 		// Get the information of the plane that is requesting for commands
-		void fetchPlaneData();
+		void fetchPlaneData(PlaneClass* plane);
 
 		// Function to send messages to the Computer System
 		void sendMessage(CompSystem* compSystem);

@@ -11,12 +11,17 @@
 
 using namespace std;
 
+// Operator Console constructor definition
 OperatorConsole::OperatorConsole() {
+	// initialize to not receiving anything from the Communication system
 	receivedComm(false);
+	// initialize a pointer to the Computer System to send it data
 	compSystem(nullptr);
 }
 
+// store the commands sent to the Operator console into a log file
 void OperatorConsole::storeCommands() {
+	// create a log file where the commands will be stored
 	string filename = "log.txt";
 	string command;
 
@@ -51,26 +56,33 @@ void OperatorConsole::storeCommands() {
 	
 // 	inputFile.close();
 // }
-
-void OperatorConsole::fetchPlaneData(Plane* plane) {
-	Plane data;
 }
 
-void OperatorConsole::sendMessage(CompSystem* compSystem, int planeID) {
+// fetch each plane's information
+void OperatorConsole::fetchPlaneData(PlaneClass* plane) {
+	PlaneClass data;
+}
+
+// send all the command details to the Computer System
+void OperatorConsole::sendMessage(CompSystem* compSystem) {
 	this->compSystem = compSystem;
 }
 
+// function definition to allow the display of the aircraft details onto the Display Data class from the Computer System
 void OperatorConsole::printDetails(int id) {
 	this->compSystem
 }
 
-void* OperatorConsole::threadOpConsole(void* arg) {
+// this is the main function of the Operator Console where the commands will be verified to make sure they are valid
+void* OperatorConsole::operatorMain(void* arg) {
 	// OperatorConsole &operatorConsole = *((OperatorConsole*)arg);
 
-	// Run through the commands for a specific plane ID until it is no longer this ID that sends commands
+	// get the plane ID information from the PlaneClass to iterate through each of them for the command executions
 	PlaneClass planeID;
+	// get the command definitions from the CompSystem class
 	CompSystem command;
 
+	// Run through the commands for a specific plane ID until it is no longer this ID that sends commands
 	while(planeID) {
 		// Verify which command method needs to be run and make sure it is a possible input
 		if("changeSpeed") {
@@ -85,5 +97,7 @@ void* OperatorConsole::threadOpConsole(void* arg) {
 		else {
 			cout << "This is an invalid command" << endl;
 		}
+		// once commands are verified, they can be sent to the Computer System for execution
+		sendMessage();
 	}
 }
