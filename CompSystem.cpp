@@ -1,4 +1,6 @@
 #include "CompSystem.h"
+#include "DataDisplay.h"
+#include "PlaneClass.h"
 #include <unistd.h>
 #include <iostream>
 #include <string>
@@ -7,8 +9,8 @@
 #include "Structure.h"
 #include <pthread.h>
 
-//the communication is going to be done in teh same manner as CommSystem
-pthread_t createComputerSysThread() {
+//the communication is going to be done in the same manner as CommSystem
+pthread_t createComputerSysThread(void* collisionCallback) {
 	
     int receivedComm;
 	pthread_t thread;
@@ -21,9 +23,58 @@ pthread_t createComputerSysThread() {
 	receivedComm = pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
 	/* Creating thread with constructed attribute object */
-	receivedComm = pthread_create(&thread, &attr, CompSystemMain, NULL);
+	receivedComm = pthread_create(&thread, &attr, CompSystemMain, NULL, void* collisionCallback);
 
 	return thread;
+}
+
+//definition of function to change speed of aircraft
+void CompSystem::changeSpeed(int id, double s) {
+	PlaneClass* plane = null;
+
+	for(int i = 0; i < plane.size(); i++) {
+		if(plane[i].getId() == id) {
+			plane = &planes[i];
+		}
+	}
+	// Verify if the plane exists in the list of planes
+	if(plane = null) {
+		cout << "This aircraft is not found" << endl;
+	}
+	// Change the speed to the new one
+	plane -> setSpeed(s);
+}
+
+//definition of function to change flight level of aircraft
+void CompSystem::changeAltitude(int id, int a) {
+	PlaneClass* plane = null;
+	for(int i = 0; i < plane.size(); i++) {
+		if(plane[i].getId() == id) {
+			plane = &plane[i];
+		}
+	}
+	// Verify if the plane exists in the list of planes
+	if(plane == null) {
+		cout << "This aircraft is not found" << endl;
+	}
+	// Change the altitude to the new one
+	plane -> setAltitude(a);
+}
+
+//definition of function to change position of aircraft
+void CompSystem::changePosition(int id, float orient) {
+	PlaneClass* plane = null;
+	for(int i = 0; i < plane.size(); i++) {
+		if(plane[i].getId() == id) {
+			plane = &plane[i];
+		}
+	}
+	// Verify if the plane exists in the list of planes
+	if(plane == null) {
+		cout << "This aircraft is not found" << endl;
+	}
+	// Change the position/orientation to the new one
+	plane -> setOrientation(orient);
 }
 
 // This is the main body of the CommSys thread
@@ -136,7 +187,9 @@ void collisionCheck(){
                 cout << "there is a collision..." << endl; 
                 cout << "We are going to be displaying th plane ID1 and ID2, time of collision, position in the 3d matrix, and collision time" << endl;
 
-                cout << "Airplane with ID " << airplanes_checking_collision[i].id << " colliding with airplane with ID " << airplanes_checking_collision[j].id << endl;
+                //callback that will send to the Data Display an alert that with the aircraft information that needs to be displayed in case of a collision
+                string collisionWarning = "Airplane with ID " << airplanes_checking_collision[i].id << " colliding with airplane with ID " << airplanes_checking_collision[j].id << endl;
+                collisionCallback(collisionWarning);
             }
         }
     }
