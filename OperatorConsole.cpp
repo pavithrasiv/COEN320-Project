@@ -16,11 +16,6 @@ OperatorConsole::OperatorConsole() {
 	compSystem(nullptr);
 }
 
-void OperatorConsole::changeSpeed(int id, double s) {
-	PlaneClass* plane = null;
-
-	for(int i = 0; i < plane.size(); i++) {
-		if(plane[i].getId() == id) {
 void OperatorConsole::storeCommands() {
 	string filename = "log.txt";
 	string command;
