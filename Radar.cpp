@@ -154,7 +154,6 @@ void* radarserverthread(void*) {
 	return NULL;
 }
 
-
 int mainz(int argc, char*argv[]){
 	//char cwd[256];
 	//    if (getcwd(cwd, sizeof(cwd)) != NULL) {

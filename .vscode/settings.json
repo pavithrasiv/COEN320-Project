@@ -1,6 +1,11 @@
 {
   "files.associations": {
+
+    //"*.js": "javascriptreact",
+    //"iostream": "cpp"
+
     "*.ejs": "html",
     "vector": "cpp"
+
   }
 }

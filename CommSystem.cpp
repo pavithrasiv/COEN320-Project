@@ -1,40 +1,15 @@
 #include "CommSystem.h"
+#include "PlaneClass.h"
 #include <unistd.h>
 #include <iostream>
 #include <string>
 #include <sys/iofunc.h>
 #include <sys/dispatch.h>
-#include "Structure.h"
 #include <pthread.h>
 
 using namespace std;
 
-void sendMessageToAirplane(const char* planeChannel, Msg2Airplane message){
-	const int serverConnectionID = name_open(airplaneChannel, 0);
-	/*
-	 * We want to close the connection after it is being used, which is going to be 
-	 *freeing up some space after the message is sent
-	*/
-    if (serverConnectionID == -1) {
-        cout << "Communication system error: " << planeChannel <<  " channel was not created\n" << endl;
-        return false;
-    }
-
-	cout << "Communication system is sending a message: " << message.type << "\n" << "to plane: " << message.id << "on channel: " << planeChannel << endl;
-    
-	//int MsgSend(int coid, const void *msg_ptr, int msg_size, void *reply_ptr, int reply_size);
-	const int sendResult = MsgSend(serverConnectionID, &message, sizeof(message), nullptr, 0);
-
-    if (sendResult == -1) {
-		cout << "Communication system error: " << planeChannel << " channel message was not sent /n" << endl;
-        return false;
-    }
-
-	name_close(serverConnectionID);
-
-    return true;
-}
-
+typedef struct _pulse msg_header_t;
 
 void * communicationMain() {
 	cout << "The communication has begun..." << endl;
@@ -46,7 +21,7 @@ void * communicationMain() {
 	// To register a name in the pathname space and create a channel
 	name_attach_t *pathChannel;
 
-	Msg2CommSys message;
+	PlaneClass message();
 
 	int receivedID;
 
@@ -59,30 +34,25 @@ void * communicationMain() {
 
 	while(true) {
 		// Use predefined function MsgReceive()
-		receivedID = MsgReceive(pathChannel->chid, &message, sizeof(message), NULL);
-		cout << "Message received: " << message.type <<  endl;
-
-		//include the forwarding message by operator to airplane
-
-		//this is where we are going to be handling the messages 
-		if(message.type == "ChangePlaneSpeed"){
-
-		} else if (message.type == "ChangePlanePosition"){
-
-		} else if (message.type == "ChangeAltitude"){
-
-		} else if (message.type == "RequestPlaneData"){
-
-		} else {
-			
-		}
-
-
+		receivedID = MsgReceive(pathChannel->chid, &message, message.size(), NULL);
+		cout << "Message received!" << endl;
+//		include the forwarding message by operator to airplane
 	}
 	return NULL;
 }
 
-pthread_t createCommunicationThread() {
+
+
+void disconnectFromChannel(int coid) {
+    int status = ConnectDetach(coid);
+    if (status == -1) {
+        // Handle error
+        cout<< "Error detaching connection" << endl;
+    }
+}
+
+
+pthread_t createCommunication() {
 	int receivedComm;
 	pthread_t thread;
 	pthread_attr_t attribute;
@@ -91,12 +61,33 @@ pthread_t createCommunicationThread() {
 
 	receivedComm = pthread_attr_setdetachstate(&attribute, PTHREAD_CREATE_JOINABLE);
 
-//	receivedComm = pthread_create(&thread, &attribute, communicationMain, NULL);
-//
-//	if (receivedComm != 0) {
-//	        cerr << "Failed to create thread" << endl;
-//	        exit(EXIT_FAILURE);
-//	    }
+
 	return thread;
 
+}
+
+void sendMessage(int chid, const void *msg, int size) {
+
+	//plane, sending id and client id 
+
+    int receivedID;
+    struct _msg_info info;
+
+    // Send message using MsgSend
+    int status = MsgSend(chid, msg, size, NULL, 0);
+
+    // Check for errors
+    if (status == -1) {
+        std::cout << "Error sending message" << endl;
+        return;
+    }
+
+    // Wait for reply
+    receivedID = MsgReceive(chid, NULL, 0, &info);
+
+    // Check for errors
+    if (receivedID == -1) {
+        std::cout << "Error receiving reply" << endl;
+        return;
+    }
 }

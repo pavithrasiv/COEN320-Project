@@ -4,4 +4,6 @@ pthread_t createCommunication();
 
 void * communicationMain();
 
-void sendMessageToAirplane(const char* planeChannel, Msg2Airplane message);
+void sendMessage(int chid, const void *msg, int size);
+
+void disconnectFromChannel(int coid);

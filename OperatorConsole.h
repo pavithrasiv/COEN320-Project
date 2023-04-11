@@ -1,5 +1,7 @@
 #include <string>
 #include "Structure.h"
+#include "Plane.h"
+#include "CompSystem.h"
 
 class OperatorConsole {
 	private:
@@ -9,17 +11,17 @@ class OperatorConsole {
 		// Constructor
 		OperatorConsole();
 
-
 		// Thread
-		void* threadOpConsole(void* arg);
+		void* operatorMain(void* arg);
 
-		// Functions to change parameters
-		void changeSpeed(int id, double s);
-		void changeAltitude(int id, int a);
-		void changePosition(int id, float orient);
+		// Store the commands in a vector
+		void storeCommands();
 
-		// Functions to send the message to the Computer System
-		void sendMessage();
+		// Get the information of the plane that is requesting for commands
+		void fetchPlaneData(PlaneClass* plane);
+
+		// Function to send messages to the Computer System
+		void sendMessage(CompSystem* compSystem);
 
 		// Function to display the information of the specific aircraft
 		void printDetails(int id);
