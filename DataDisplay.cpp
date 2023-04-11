@@ -96,8 +96,7 @@ void DataDisplay::receiveMessage()
         }
     }
 }
-// Creates a grid view of the airspace, ignoring z-axis, doing x and y (top-view)
-// Begins with (0,0) in the top-left corner.
+// Creates a top view of the airspace
 std::string DataDisplay::generateGrid(std::vector<PlaneClass> &airspaceInfo)
 {
 
@@ -131,7 +130,6 @@ std::string DataDisplay::generateGrid(std::vector<PlaneClass> &airspaceInfo)
 
         for (int j = 0; j < COLUMS; j++)
         {
-            // Check if grid is empty
             if (grid[i][j] == "")
             {
                 output << "|        ";
