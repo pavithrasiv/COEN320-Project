@@ -11,6 +11,8 @@
 #include <string>
 #include <sys/neutrino.h>
 
+// Ali Turkman 40111059
+
 using namespace std;
 
 class PlaneClass {
@@ -35,4 +37,7 @@ private:
 
 vector<PlaneClass> readPlanesFromFile(string fileName);
 void* PlaneClientThread(void *);
+void* TimerReceiverThread(void *);
+void* PlaneClientTestThread(void *);
 #endif // PLANE_H
+

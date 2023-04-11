@@ -13,6 +13,8 @@
 using namespace std;
 #include "PlaneClass.h"
 
+// Ali Turkman 40111059
+
 //Message header is at least a pulse
 //This identifies the message that is being sent and received
 //Unique ID for it basically
@@ -101,7 +103,7 @@ Timer::~Timer() {
 }
 
 
-int main(int argc, char*argv[]){
+int mainz(int argc, char*argv[]){
 
 	//Declare thread
 		pthread_t timerreceiver_thread;

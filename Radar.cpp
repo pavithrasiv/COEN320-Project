@@ -1,5 +1,19 @@
 #include "PlaneClass.h"
 
+#define MIN_AIRSPACE_X_REGION 0
+#define MAX_AIRSPACE_X_REGION 100000
+#define MIN_AIRSPACE_Y_REGION 0
+#define MAX_AIRSPACE_Y_REGION 100000
+#define MIN_AIRSPACE_Z_REGION 15000
+#define MAX_AIRSPACE_Z_REGION 25000
+const int num_rows = 10;
+const int num_cols = 10;
+const int num_depths = 10;
+
+// Ali Turkman 40111059
+
+int grid[num_rows][num_cols][num_depths];
+
 
 //Thread that receives message (server) needs a channel, and thread that sends message
 //Must create a connection that attaches to the channel
@@ -43,6 +57,15 @@ void* radarserverthread(void*) {
 	if ((name_attach_t = name_attach(NULL, ATTACH_POINT, 0)) == NULL){
 			perror("Error occurred during creation of channel");
 	}
+
+	// Initialize grid to all zeros
+	    for (int i = 0; i < num_rows; i++) {
+	        for (int j = 0; j < num_cols; j++) {
+	            for (int k = 0; k < num_depths; k++) {
+	                grid[i][j][k] = 0;
+	            }
+	        }
+	    }
 
 	//To receive a message from the client
 	//int MsgReceive(int chid, void * msg, size_t size, struct _msg_info * info);
@@ -123,8 +146,32 @@ void* radarserverthread(void*) {
 				cout << "Plane " << msg.id << " outside of airspace!" << endl;
 			}
 			else {
+		    int grid_x = (msg.position[0] - MIN_AIRSPACE_X_REGION) / ((MAX_AIRSPACE_X_REGION - MIN_AIRSPACE_X_REGION) / num_cols);
+		    int grid_y = (msg.position[1] - MIN_AIRSPACE_Y_REGION) / ((MAX_AIRSPACE_Y_REGION - MIN_AIRSPACE_Y_REGION) / num_rows);
+		    int grid_z = (msg.position[2] - MIN_AIRSPACE_Z_REGION) / ((MAX_AIRSPACE_Z_REGION - MIN_AIRSPACE_Z_REGION) / num_depths);
+		    grid[grid_x][grid_y][grid_z] = 1;
 			cout << "Velocity received from plane thread (Plane ID " <<  msg.id << "): (" << msg.velocity[0] << ", " << msg.velocity[1] << ", " << msg.velocity[2] << ")" << endl;
 			cout << "Position received from plane thread (Plane ID " <<  msg.id << "): (" << msg.position[0] << ", " << msg.position[1] << ", " << msg.position[2] << ")" << endl;
+
+			for (int i = 0; i < num_rows; i++) {
+			        for (int j = 0; j < num_cols; j++) {
+			            int val = 0;
+			            for (int k = 0; k < num_depths; k++) {
+			                if (grid[i][j][k] != 0) {
+			                    val = grid[i][j][k];
+			                    break;
+			                }
+			            }
+			            if (val == 1) {
+			                std::cout << "  "<< msg.id <<"  ";
+			            } else {
+			                std::cout << "  0  ";
+			            }
+			        }
+			        std::cout << std::endl << std::endl << std::endl;
+			    }
+			grid[grid_x][grid_y][grid_z] = 0;
+
 			}
 			}
 			else {
@@ -154,24 +201,14 @@ void* radarserverthread(void*) {
 	return NULL;
 }
 
-int mainz(int argc, char*argv[]){
+
+int main(int argc, char*argv[]){
 	//char cwd[256];
 	//    if (getcwd(cwd, sizeof(cwd)) != NULL) {
 	//        std::cout << "Current working directory is: " << cwd << std::endl;
 	//    } else {
 	//        std::perror("getcwd() error");
 	//    }
-
-	//vector<PlaneClass> planes = readPlanesFromFile("./planes.txt");
-	//for (const auto& plane : planes) {
-	//    cout << "ID: " << plane.getAircraftID() << endl;
-	//    cout << "Arrival Time: " << plane.getArrivalTime() << endl;
-	//    cout << "Position: (" << plane.getPosition(0) << ", " << plane.getPosition(1) << ", " << plane.getPosition(2) << ")" << endl;
-	//    cout << "Velocity: (" << plane.getVelocity(0) << ", " << plane.getVelocity(1) << ", " << plane.getVelocity(2) << ")" << endl;
-	//}
-
-	//TimerStart(planes);
-
 
 	//Declare thread
 	pthread_t server_thread;

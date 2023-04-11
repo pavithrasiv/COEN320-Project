@@ -1,5 +1,5 @@
 /*
- * By Ali Turkman, based on code provided within Timer tutorial
+ * Ali Turkman, based on code provided within Timer tutorial
  */
 
 #ifndef TIMER_H_

@@ -3,7 +3,7 @@
 #include "CompSystem.h"
 #include "Radar.h"
 #include "Timer.h"
-#include "Plane.h"
+#include "PlaneClass.h"
 
 using namespace std;
 
