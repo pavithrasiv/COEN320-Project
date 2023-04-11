@@ -25,8 +25,6 @@ class Timer {
 	timer_t timer_id;
 	int period;
 	int offset;
-	int CHID; // Channel ID
-	int CONID; // Connection ID
 	struct sigevent sig_event; // For SIGEV_PULSE
 	sigset_t sig_set;
 	struct itimerspec timer_spec;
@@ -38,7 +36,11 @@ public:
 	Timer(int offset, int period);
 	void set_timer(int offset, int period);
 	void wait_next_activation();
+	~Timer();
 
 };
+
+void* TimerThread(void *);
+
 
 #endif

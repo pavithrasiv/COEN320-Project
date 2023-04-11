@@ -2,7 +2,7 @@
 
 pthread_t createCommunication();
 
-void * communicationMain(void *arg);
+void * communicationMain();
 
 void sendMessage(int chid, const void *msg, int size);
 

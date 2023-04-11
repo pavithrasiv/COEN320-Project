@@ -14,8 +14,7 @@ class DataDisplay
     } planeInfo;
 
 private:
-    void run();
-    void receiveMessage();
+        void receiveMessage();
     std::string createGrid(std::vector<PlaneClass>);
     int channelID;
     int fd;
@@ -23,6 +22,6 @@ private:
 public:
     DataDisplay();
     int getChannelID() const;
-    static void start(void *context);
+    void run();
 };
 #endif

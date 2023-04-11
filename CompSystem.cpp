@@ -6,6 +6,7 @@
 #include <string>
 #include <sys/iofunc.h>
 #include <sys/dispatch.h>
+#include <sys/neutrino.h>
 #include "Structure.h"
 #include <pthread.h>
 
